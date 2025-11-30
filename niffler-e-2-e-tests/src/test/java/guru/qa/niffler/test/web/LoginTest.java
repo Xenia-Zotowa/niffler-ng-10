@@ -14,7 +14,7 @@ public class LoginTest {
   @Test
   void mainPageShouldBeDisplayedAfterSuccessLogin() {
     Selenide.open(CFG.frontUrl(), LoginPage.class)
-        .login("duck", "12345")
-        .checkThatPageLoaded();
+            .login("duck", "12345")
+            .checkThatPageLoaded();
   }
 }

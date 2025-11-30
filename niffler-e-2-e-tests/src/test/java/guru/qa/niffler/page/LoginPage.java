@@ -2,7 +2,7 @@ package guru.qa.niffler.page;
 
 import com.codeborne.selenide.SelenideElement;
 
-import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.*;
 
 public class LoginPage {
   private final SelenideElement usernameInput = $("#username");
@@ -15,4 +15,12 @@ public class LoginPage {
     submitBtn.click();
     return new MainPage();
   }
+
+  public RegisterPage clickRegister() {
+    $("a[href*='/register']").click();
+    return page(RegisterPage.class);
+
+  }
+
+
 }

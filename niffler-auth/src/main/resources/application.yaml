@@ -116,7 +116,7 @@ spring:
     username: postgres
     password: secret
 niffler-front:
-  base-uri: 'http://frontend.niffler.dc'
+  base-uri: 'http://localhost:3000'
 niffler-auth:
   base-uri: 'http://auth.niffler.dc:9000'
   rp-id: 'http host not supported'
