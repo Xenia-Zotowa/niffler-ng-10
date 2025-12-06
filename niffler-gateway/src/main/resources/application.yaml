@@ -83,7 +83,7 @@ niffler-userdata:
 niffler-spend:
   base-uri: 'http://spend.niffler.dc:8093'
 niffler-front:
-  base-uri: 'http://frontend.niffler.dc'
+  base-uri: 'http://localhost:3000'
 niffler-gateway:
   base-uri: 'http://gateway.niffler.dc:8090'
 ---

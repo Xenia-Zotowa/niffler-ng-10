@@ -22,25 +22,25 @@ public class SpendDbClient implements SpendClient {
   public SpendJson createSpend(SpendJson spend) {
     try {
       final JdbcTemplate jdbcTemplate = new JdbcTemplate(
-          new SingleConnectionDataSource(
-              DriverManager.getConnection(
-                  CFG.spendJdbcUrl(),
-                  "postgres",
-                  "secret"
-              ),
-              true
-          )
+              new SingleConnectionDataSource(
+                      DriverManager.getConnection(
+                              CFG.spendJdbcUrl(),
+                              "postgres",
+                              "secret"
+                      ),
+                      true
+              )
       );
 
       final KeyHolder kh = new GeneratedKeyHolder();
       final CategoryJson existingCategory = findCategoryByNameAndUsername(spend.category().name(), spend.username())
-          .orElseGet(() -> createCategory(spend.category()));
+              .orElseGet(() -> createCategory(spend.category()));
 
       jdbcTemplate.update(conn -> {
         PreparedStatement ps = conn.prepareStatement(
-            "INSERT INTO \"spend\" (username, spend_date, currency, amount, description, category_id) " +
-                "VALUES (?, ?, ?, ?, ?, ?)",
-            Statement.RETURN_GENERATED_KEYS
+                "INSERT INTO \"spend\" (username, spend_date, currency, amount, description, category_id) " +
+                        "VALUES (?, ?, ?, ?, ?, ?)",
+                Statement.RETURN_GENERATED_KEYS
         );
         ps.setString(1, spend.username());
         ps.setDate(2, new java.sql.Date(spend.spendDate().getTime()));
@@ -52,13 +52,13 @@ public class SpendDbClient implements SpendClient {
       }, kh);
 
       return new SpendJson(
-          (UUID) kh.getKeys().get("id"),
-          spend.spendDate(),
-          existingCategory,
-          spend.currency(),
-          spend.amount(),
-          spend.description(),
-          spend.username()
+              (UUID) kh.getKeys().get("id"),
+              spend.spendDate(),
+              existingCategory,
+              spend.currency(),
+              spend.amount(),
+              spend.description(),
+              spend.username()
       );
     } catch (SQLException e) {
       throw new RuntimeException(e);
@@ -69,21 +69,21 @@ public class SpendDbClient implements SpendClient {
   public CategoryJson createCategory(CategoryJson category) {
     try {
       final JdbcTemplate jdbcTemplate = new JdbcTemplate(
-          new SingleConnectionDataSource(
-              DriverManager.getConnection(
-                  CFG.spendJdbcUrl(),
-                  "postgres",
-                  "secret"
-              ),
-              true
-          )
+              new SingleConnectionDataSource(
+                      DriverManager.getConnection(
+                              CFG.spendJdbcUrl(),
+                              "postgres",
+                              "secret"
+                      ),
+                      true
+              )
       );
       final KeyHolder kh = new GeneratedKeyHolder();
       jdbcTemplate.update(conn -> {
         PreparedStatement ps = conn.prepareStatement(
-            "INSERT INTO \"category\" (name, username, archived) " +
-                "VALUES (?, ?, ?)",
-            Statement.RETURN_GENERATED_KEYS
+                "INSERT INTO \"category\" (name, username, archived) " +
+                        "VALUES (?, ?, ?)",
+                Statement.RETURN_GENERATED_KEYS
         );
         ps.setString(1, category.name());
         ps.setString(2, category.username());
@@ -91,10 +91,10 @@ public class SpendDbClient implements SpendClient {
         return ps;
       }, kh);
       return new CategoryJson(
-          (UUID) kh.getKeys().get("id"),
-          category.name(),
-          category.username(),
-          false
+              (UUID) kh.getKeys().get("id"),
+              category.name(),
+              category.username(),
+              false
       );
     } catch (SQLException e) {
       throw new RuntimeException(e);
@@ -105,27 +105,27 @@ public class SpendDbClient implements SpendClient {
   public Optional<CategoryJson> findCategoryByNameAndUsername(String categoryName, String username) {
     try {
       final JdbcTemplate jdbcTemplate = new JdbcTemplate(
-          new SingleConnectionDataSource(
-              DriverManager.getConnection(
-                  CFG.spendJdbcUrl(),
-                  "postgres",
-                  "secret"
-              ),
-              true
-          )
+              new SingleConnectionDataSource(
+                      DriverManager.getConnection(
+                              CFG.spendJdbcUrl(),
+                              "postgres",
+                              "secret"
+                      ),
+                      true
+              )
       );
       return Optional.ofNullable(
-          jdbcTemplate.queryForObject(
-              "SELECT * FROM \"category\" WHERE username = ? and name = ?",
-              (rs, rowNum) -> new CategoryJson(
-                  rs.getObject("id", UUID.class),
-                  rs.getString("name"),
-                  rs.getString("username"),
-                  rs.getBoolean("archived")
-              ),
-              username,
-              categoryName
-          )
+              jdbcTemplate.queryForObject(
+                      "SELECT * FROM \"category\" WHERE username = ? and name = ?",
+                      (rs, rowNum) -> new CategoryJson(
+                              rs.getObject("id", UUID.class),
+                              rs.getString("name"),
+                              rs.getString("username"),
+                              rs.getBoolean("archived")
+                      ),
+                      username,
+                      categoryName
+              )
       );
     } catch (Exception e) {
       return Optional.empty();

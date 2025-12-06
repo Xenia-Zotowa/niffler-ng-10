@@ -15,9 +15,9 @@ public class SpendApiClient implements SpendClient{
   private static final Config CFG = Config.getInstance();
 
   private final Retrofit retrofit = new Retrofit.Builder()
-      .baseUrl(CFG.spendUrl())
-      .addConverterFactory(JacksonConverterFactory.create())
-      .build();
+          .baseUrl(CFG.spendUrl())
+          .addConverterFactory(JacksonConverterFactory.create())
+          .build();
 
   private final SpendApi spendApi = retrofit.create(SpendApi.class);
 
@@ -25,8 +25,8 @@ public class SpendApiClient implements SpendClient{
   @Override
   public SpendJson createSpend(SpendJson spend) {
     return spendApi.createSpend(spend)
-        .execute()
-        .body();
+            .execute()
+            .body();
   }
 
   @Override

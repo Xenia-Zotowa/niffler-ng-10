@@ -18,6 +18,12 @@ buildscript {
         wiremockVersion = '3.13.1'
         ashotVersion = '1.5.4'
         fakerVersion = '1.0.2'
+        jakartaJaxbVersion = '4.0.0'
+        postgresDriverVersion = '42.7.4'
+        grpcVersion = '1.70.0'
+        protobufVersion = '3.25.5'
+        lombokVersion = '1.18.34'
+
         userdataWsdlUrl = System.getProperty("test.env") == "docker"
                 ? "http://userdata.niffler.dc:8089/ws/userdata.wsdl"
                 : "http://localhost:8089/ws/userdata.wsdl"
@@ -28,8 +34,7 @@ buildscript {
 }
 
 plugins {
-    id 'io.qameta.allure' version '3.0.0'
-    id 'io.qameta.allure-adapter' version '3.0.0'
+    id 'io.qameta.allure' version '2.11.2' // Исправленная версия плагина
     id 'com.github.edeandrea.xjc-generation' version '1.6'
 }
 
@@ -117,8 +122,8 @@ dependencies {
     compileOnly 'jakarta.annotation:jakarta.annotation-api:1.3.5' // Java 9+ compatibility - Do NOT update to 2.0.0
     // SOAP
     testImplementation "com.sun.xml.messaging.saaj:saaj-impl:${saajVersion}"
-    testImplementation "jakarta.xml.bind:jakarta.xml.bind-api:${project.ext.jakartaJaxbVersion}"
-    xjc "org.glassfish.jaxb:jaxb-xjc:${project.ext.jakartaJaxbVersion}"
+    testImplementation "jakarta.xml.bind:jakarta.xml.bind-api:4.0.0"
+    xjc "org.glassfish.jaxb:jaxb-xjc:4.0.5"
     // Kafka
     testImplementation "org.apache.kafka:kafka-clients:${kafkaClientsVersion}"
     // Wiremock
@@ -126,6 +131,8 @@ dependencies {
     // Lombok
     testAnnotationProcessor "org.projectlombok:lombok:${project.ext.lombokVersion}"
     testCompileOnly "org.projectlombok:lombok:${project.ext.lombokVersion}"
+
+    implementation 'io.micrometer:context-propagation:1.1.1'
 }
 
 tasks.withType(JavaCompile).configureEach {
