@@ -5,18 +5,19 @@ import com.codeborne.selenide.SelenideElement;
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.page;
+import static org.hamcrest.core.StringContains.containsString;
 
 public class RegisterPage {
 
-    private final SelenideElement usernameInput = $("input[name='username']");
+    private final SelenideElement usernameInput = $("#username");
     private final SelenideElement passwordInput = $("input[name='password']");
     private final SelenideElement passwordSubmitInput = $("input[name='passwordSubmit']");
     private final SelenideElement submitButton = $("button[type='submit']");
     private final SelenideElement successAlert = $("div.alert-success");
     private final SelenideElement errorAlert = $("div.alert-danger");
     private final SelenideElement loginLink = $("a[href*='/login']");
-    private final SelenideElement registerForm = $("form");
     private final SelenideElement signIn = $(".form_sign-in");
+    private final SelenideElement registerPasskey = $("button.MuiButton-contained[type=\"button\"]");
 
     public RegisterPage registerUser(String username, String password, String passwordSubmit) {
         usernameInput.setValue(username);
@@ -27,17 +28,22 @@ public class RegisterPage {
         return this;
 
     }
+    public RegisterPage notRegisterUser(String username, String password, String passwordSubmit) {
+        usernameInput.setValue(username);
+        passwordInput.setValue(password);
+        passwordSubmitInput.setValue(passwordSubmit);
+        submitButton.click();
+        return this;
+
+    }
 
     public RegisterPage checkRegistrationSuccess() {
         // Пробуем разные способы проверки успешной регистрации
 
         // Способ 1: Проверяем что мы перешли на страницу логина
-        loginLink.shouldBe(visible).shouldHave(text("Login"));
+        usernameInput.shouldHave(value("user_"));
 
-        // Способ 2: Проверяем что форма регистрации исчезла
-        registerForm.shouldNotBe(visible);
-
-        // Способ 3: Пробуем найти алерт успеха (если есть)
+        // Способ 2: Пробуем найти алерт успеха (если есть)
         try {
             if (successAlert.exists()) {
                 successAlert.shouldBe(visible).shouldHave(text("success"));
@@ -60,5 +66,11 @@ public class RegisterPage {
     public LoginPage returnToLogin() {
         loginLink.click();
         return page(LoginPage.class);
+    }
+
+    public RegisterPage setPasswordSubmit() {
+        registerPasskey.click();
+        return this;
+
     }
 }

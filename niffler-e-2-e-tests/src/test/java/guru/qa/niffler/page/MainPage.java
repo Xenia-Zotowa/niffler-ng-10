@@ -16,6 +16,8 @@ public class MainPage {
   private final SelenideElement listbox = $("ul[role='listbox']");
   private final SelenideElement descriptionInput = $("#description");
   private final SelenideElement addButton = $("#save");
+  private final SelenideElement profileLink = $("a[href*='/profile']");
+  private final SelenideElement menuButton = $("button[aria-label=\"Menu\"]");
 
 //  a.MuiButtonBase-root.MuiButton-contained[href="/spending"]
   public MainPage checkThatPageLoaded() {
@@ -45,6 +47,12 @@ public class MainPage {
 
   public MainPage setCategory(String category) {
     categoryInput.setValue(category);
+    return this;
+  }
+  public MainPage createCategory(String categoryName) {
+    $("button[data-test='create-category']").click();
+    $("input[name='categoryName']").setValue(categoryName);
+    $("button[data-test='save-category']").click();
     return this;
   }
 
@@ -84,6 +92,13 @@ public class MainPage {
   public MainPage setNewSpendingDescription(String newDescription) {
     // реализация установки нового описания
     return this;
+  }
+
+
+  public ProfilePage goToProfile() {
+    menuButton.click();
+    profileLink.click();
+    return new ProfilePage();
   }
 
   public MainPage save() {

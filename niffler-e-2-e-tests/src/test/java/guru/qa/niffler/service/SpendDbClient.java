@@ -3,23 +3,23 @@ package guru.qa.niffler.service;
 import guru.qa.niffler.config.Config;
 import guru.qa.niffler.model.CategoryJson;
 import guru.qa.niffler.model.SpendJson;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 
 import java.sql.*;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public class SpendDbClient implements SpendClient {
+public abstract class SpendDbClient implements SpendClient {
 
   private static final Config CFG = Config.getInstance();
 
   @Override
-  public SpendJson createSpend(SpendJson spend) {
+  public SpendJson addSpend(SpendJson spend) {
     try {
       final JdbcTemplate jdbcTemplate = new JdbcTemplate(
               new SingleConnectionDataSource(
@@ -33,9 +33,14 @@ public class SpendDbClient implements SpendClient {
       );
 
       final KeyHolder kh = new GeneratedKeyHolder();
-      final CategoryJson existingCategory = findCategoryByNameAndUsername(spend.category().name(), spend.username())
-              .orElseGet(() -> createCategory(spend.category()));
 
+      // Находим или создаем категорию
+      final CategoryJson existingCategory = findCategoryByNameAndUsername(
+              spend.category().name(),
+              spend.username()
+      ).orElseGet(() -> addCategory(spend.category()));
+
+      // Вставляем трату в БД
       jdbcTemplate.update(conn -> {
         PreparedStatement ps = conn.prepareStatement(
                 "INSERT INTO \"spend\" (username, spend_date, currency, amount, description, category_id) " +
@@ -51,6 +56,7 @@ public class SpendDbClient implements SpendClient {
         return ps;
       }, kh);
 
+      // Возвращаем созданную трату с ID из БД
       return new SpendJson(
               (UUID) kh.getKeys().get("id"),
               spend.spendDate(),
@@ -64,9 +70,8 @@ public class SpendDbClient implements SpendClient {
       throw new RuntimeException(e);
     }
   }
-
   @Override
-  public CategoryJson createCategory(CategoryJson category) {
+  public CategoryJson addCategory(CategoryJson category) {
     try {
       final JdbcTemplate jdbcTemplate = new JdbcTemplate(
               new SingleConnectionDataSource(
@@ -78,6 +83,7 @@ public class SpendDbClient implements SpendClient {
                       true
               )
       );
+
       final KeyHolder kh = new GeneratedKeyHolder();
       jdbcTemplate.update(conn -> {
         PreparedStatement ps = conn.prepareStatement(
@@ -90,6 +96,7 @@ public class SpendDbClient implements SpendClient {
         ps.setBoolean(3, false);
         return ps;
       }, kh);
+
       return new CategoryJson(
               (UUID) kh.getKeys().get("id"),
               category.name(),
@@ -99,6 +106,30 @@ public class SpendDbClient implements SpendClient {
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+  }
+  @Override
+  public SpendJson editSpend(SpendJson spend) {
+    return null;
+  }
+
+  @Override
+  public SpendJson getSpend(String id) {
+    return null;
+  }
+
+  @Override
+  public List<SpendJson> getAllSpends(String username) {
+    return List.of();
+  }
+
+  @Override
+  public void removeSpend(String id) {
+    // пустая реализация
+  }
+
+  @Override
+  public CategoryJson updateCategory(CategoryJson category) {
+    return null;
   }
 
   @Override
@@ -130,5 +161,50 @@ public class SpendDbClient implements SpendClient {
     } catch (Exception e) {
       return Optional.empty();
     }
+  }
+
+  @Override
+  public List<CategoryJson> getAllCategories(String username) {
+    return List.of();
+  }
+
+  @Override
+  public List<SpendJson> getSpendsByCategory(String username, String category) {
+    return List.of();
+  }
+
+  @Override
+  public List<SpendJson> getSpendsByPeriod(String username, String fromDate, String toDate) {
+    return List.of();
+  }
+
+  @Override
+  public List<SpendJson> getSpendsByCategoryAndPeriod(String username, String category, String fromDate, String toDate) {
+    return List.of();
+  }
+
+  @Override
+  public Double getTotalSpends(String username) {
+    return 0.0;
+  }
+
+  @Override
+  public Double getTotalSpendsByCategory(String username, String category) {
+    return 0.0;
+  }
+
+  @Override
+  public Map<String, Double> getCategoryDistribution(String username) {
+    return Map.of();
+  }
+
+  @Override
+  public Map<String, Double> getCurrencyRates() {
+    return Map.of();
+  }
+
+  @Override
+  public Double convertCurrency(Double amount, String fromCurrency, String toCurrency) {
+    return 0.0;
   }
 }
