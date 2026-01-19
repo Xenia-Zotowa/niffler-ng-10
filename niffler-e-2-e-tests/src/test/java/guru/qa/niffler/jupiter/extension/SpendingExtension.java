@@ -23,7 +23,7 @@ public class SpendingExtension implements BeforeEachCallback, ParameterResolver 
         Spending.class
     ).ifPresent(
         anno -> {
-          final SpendJson created = spendClient.createSpend(
+            final SpendJson created = spendClient.addSpend(
               new SpendJson(
                   null,
                   new Date(),
