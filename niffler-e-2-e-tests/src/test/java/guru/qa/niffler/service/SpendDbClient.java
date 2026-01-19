@@ -7,204 +7,174 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-
-import java.sql.*;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-public abstract class SpendDbClient implements SpendClient {
+public class SpendDbClient implements SpendClient {
 
-  private static final Config CFG = Config.getInstance();
+    private static final Config CFG = Config.getInstance();
 
-  @Override
-  public SpendJson addSpend(SpendJson spend) {
-    try {
-      final JdbcTemplate jdbcTemplate = new JdbcTemplate(
-              new SingleConnectionDataSource(
-                      DriverManager.getConnection(
-                              CFG.spendJdbcUrl(),
-                              "postgres",
-                              "secret"
-                      ),
-                      true
-              )
-      );
+    @Override
+    public SpendJson addSpend(SpendJson spend) {
+        try {
+            final JdbcTemplate jdbcTemplate = new JdbcTemplate(
+                    new SingleConnectionDataSource(
+                            DriverManager.getConnection(
+                                    CFG.spendJdbcUrl(),
+                                    "postgres",
+                                    "secret"
+                            ),
+                            true
+                    )
+            );
 
-      final KeyHolder kh = new GeneratedKeyHolder();
+            final KeyHolder kh = new GeneratedKeyHolder();
 
-      // Находим или создаем категорию
-      final CategoryJson existingCategory = findCategoryByNameAndUsername(
-              spend.category().name(),
-              spend.username()
-      ).orElseGet(() -> addCategory(spend.category()));
+            // Находим или создаем категорию
+            final CategoryJson existingCategory = findCategoryByNameAndUsername(
+                    spend.category().name(),
+                    spend.username()
+            ).orElseGet(() -> addCategory(spend.category()));
 
-      // Вставляем трату в БД
-      jdbcTemplate.update(conn -> {
-        PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO \"spend\" (username, spend_date, currency, amount, description, category_id) " +
-                        "VALUES (?, ?, ?, ?, ?, ?)",
-                Statement.RETURN_GENERATED_KEYS
-        );
-        ps.setString(1, spend.username());
-        ps.setDate(2, new java.sql.Date(spend.spendDate().getTime()));
-        ps.setString(3, spend.currency().name());
-        ps.setDouble(4, spend.amount());
-        ps.setString(5, spend.description());
-        ps.setObject(6, existingCategory.id());
-        return ps;
-      }, kh);
+            // Вставляем трату в БД
+            jdbcTemplate.update(conn -> {
+                PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO \"spend\" (username, spend_date, currency, amount, description, category_id) " +
+                                "VALUES (?, ?, ?, ?, ?, ?)",
+                        Statement.RETURN_GENERATED_KEYS
+                );
+                ps.setString(1, spend.username());
+                ps.setDate(2, new java.sql.Date(spend.spendDate().getTime()));
+                ps.setString(3, spend.currency().name());
+                ps.setDouble(4, spend.amount());
+                ps.setString(5, spend.description());
+                ps.setObject(6, existingCategory.id());
+                return ps;
+            }, kh);
 
-      // Возвращаем созданную трату с ID из БД
-      return new SpendJson(
-              (UUID) kh.getKeys().get("id"),
-              spend.spendDate(),
-              existingCategory,
-              spend.currency(),
-              spend.amount(),
-              spend.description(),
-              spend.username()
-      );
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+            // Возвращаем созданную трату с ID из БД
+            return new SpendJson(
+                    (UUID) kh.getKeys().get("id"),
+                    spend.spendDate(),
+                    existingCategory,
+                    spend.currency(),
+                    spend.amount(),
+                    spend.description(),
+                    spend.username()
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
-  }
-  @Override
-  public CategoryJson addCategory(CategoryJson category) {
-    try {
-      final JdbcTemplate jdbcTemplate = new JdbcTemplate(
-              new SingleConnectionDataSource(
-                      DriverManager.getConnection(
-                              CFG.spendJdbcUrl(),
-                              "postgres",
-                              "secret"
-                      ),
-                      true
-              )
-      );
 
-      final KeyHolder kh = new GeneratedKeyHolder();
-      jdbcTemplate.update(conn -> {
-        PreparedStatement ps = conn.prepareStatement(
-                "INSERT INTO \"category\" (name, username, archived) " +
-                        "VALUES (?, ?, ?)",
-                Statement.RETURN_GENERATED_KEYS
-        );
-        ps.setString(1, category.name());
-        ps.setString(2, category.username());
-        ps.setBoolean(3, false);
-        return ps;
-      }, kh);
+    @Override
+    public CategoryJson addCategory(CategoryJson category) {
+        try {
+            final JdbcTemplate jdbcTemplate = new JdbcTemplate(
+                    new SingleConnectionDataSource(
+                            DriverManager.getConnection(
+                                    CFG.spendJdbcUrl(),
+                                    "postgres",
+                                    "secret"
+                            ),
+                            true
+                    )
+            );
 
-      return new CategoryJson(
-              (UUID) kh.getKeys().get("id"),
-              category.name(),
-              category.username(),
-              false
-      );
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
+            final KeyHolder kh = new GeneratedKeyHolder();
+            jdbcTemplate.update(conn -> {
+                PreparedStatement ps = conn.prepareStatement(
+                        "INSERT INTO \"category\" (name, username, archived) " +
+                                "VALUES (?, ?, ?)",
+                        Statement.RETURN_GENERATED_KEYS
+                );
+                ps.setString(1, category.name());
+                ps.setString(2, category.username());
+                ps.setBoolean(3, false);
+                return ps;
+            }, kh);
+
+            return new CategoryJson(
+                    (UUID) kh.getKeys().get("id"),
+                    category.name(),
+                    category.username(),
+                    false
+            );
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
-  }
-  @Override
-  public SpendJson editSpend(SpendJson spend) {
-    return null;
-  }
 
-  @Override
-  public SpendJson getSpend(String id) {
-    return null;
-  }
-
-  @Override
-  public List<SpendJson> getAllSpends(String username) {
-    return List.of();
-  }
-
-  @Override
-  public void removeSpend(String id) {
-    // пустая реализация
-  }
-
-  @Override
-  public CategoryJson updateCategory(CategoryJson category) {
-    return null;
-  }
-
-  @Override
-  public Optional<CategoryJson> findCategoryByNameAndUsername(String categoryName, String username) {
-    try {
-      final JdbcTemplate jdbcTemplate = new JdbcTemplate(
-              new SingleConnectionDataSource(
-                      DriverManager.getConnection(
-                              CFG.spendJdbcUrl(),
-                              "postgres",
-                              "secret"
-                      ),
-                      true
-              )
-      );
-      return Optional.ofNullable(
-              jdbcTemplate.queryForObject(
-                      "SELECT * FROM \"category\" WHERE username = ? and name = ?",
-                      (rs, rowNum) -> new CategoryJson(
-                              rs.getObject("id", UUID.class),
-                              rs.getString("name"),
-                              rs.getString("username"),
-                              rs.getBoolean("archived")
-                      ),
-                      username,
-                      categoryName
-              )
-      );
-    } catch (Exception e) {
-      return Optional.empty();
+    @Override
+    public SpendJson editSpend(SpendJson spend) {
+        throw new UnsupportedOperationException("Method not implemented yet");
     }
-  }
 
-  @Override
-  public List<CategoryJson> getAllCategories(String username) {
-    return List.of();
-  }
+    @Override
+    public SpendJson getSpend(String id, String username) {
+        throw new UnsupportedOperationException("Method not implemented yet");
+    }
 
-  @Override
-  public List<SpendJson> getSpendsByCategory(String username, String category) {
-    return List.of();
-  }
+    @Override
+    public List<SpendJson> getAllSpends(String username) {
+        return List.of();
+    }
 
-  @Override
-  public List<SpendJson> getSpendsByPeriod(String username, String fromDate, String toDate) {
-    return List.of();
-  }
+    @Override
+    public void removeSpend(String username, List<String> ids) {
 
-  @Override
-  public List<SpendJson> getSpendsByCategoryAndPeriod(String username, String category, String fromDate, String toDate) {
-    return List.of();
-  }
+    }
 
-  @Override
-  public Double getTotalSpends(String username) {
-    return 0.0;
-  }
+    @Override
+    public void removeSpend(String id) {
+        throw new UnsupportedOperationException("Method not implemented yet");
+    }
 
-  @Override
-  public Double getTotalSpendsByCategory(String username, String category) {
-    return 0.0;
-  }
+    @Override
+    public CategoryJson updateCategory(CategoryJson category) {
+        throw new UnsupportedOperationException("Method not implemented yet");
+    }
 
-  @Override
-  public Map<String, Double> getCategoryDistribution(String username) {
-    return Map.of();
-  }
+    @Override
+    public Optional<CategoryJson> findCategoryByNameAndUsername(String categoryName, String username) {
+        try {
+            final JdbcTemplate jdbcTemplate = new JdbcTemplate(
+                    new SingleConnectionDataSource(
+                            DriverManager.getConnection(
+                                    CFG.spendJdbcUrl(),
+                                    "postgres",
+                                    "secret"
+                            ),
+                            true
+                    )
+            );
+            return Optional.ofNullable(
+                    jdbcTemplate.queryForObject(
+                            "SELECT * FROM \"category\" WHERE username = ? and name = ?",
+                            (rs, rowNum) -> new CategoryJson(
+                                    rs.getObject("id", UUID.class),
+                                    rs.getString("name"),
+                                    rs.getString("username"),
+                                    rs.getBoolean("archived")
+                            ),
+                            username,
+                            categoryName
+                    )
+            );
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
 
-  @Override
-  public Map<String, Double> getCurrencyRates() {
-    return Map.of();
-  }
+    @Override
+    public List<CategoryJson> getAllCategories(String username) {
+        return List.of();
+    }
 
-  @Override
-  public Double convertCurrency(Double amount, String fromCurrency, String toCurrency) {
-    return 0.0;
-  }
+
 }

@@ -1,11 +1,11 @@
 package guru.qa.niffler.page;
 
 import com.codeborne.selenide.SelenideElement;
-import guru.qa.niffler.model.CurrencyValues;
+import io.qameta.allure.Step;
 
-import static com.codeborne.selenide.Condition.*;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.$$;
+import static com.codeborne.selenide.Condition.text;
+import static com.codeborne.selenide.Condition.visible;
+import static com.codeborne.selenide.Selenide.*;
 
 public class ProfilePage {
 
@@ -17,57 +17,73 @@ public class ProfilePage {
     private final SelenideElement mainPageLink = $("a[href*='/main']");
 
 
+    @Step("Установить имя пользователя")
     public ProfilePage setFirstName(String firstName) {
         firstNameInput.setValue(firstName);
         return this;
     }
 
 
+    @Step("Переход в профиль")
+    public ProfilePage goToProfile() {
+        menuButton.click();
+        profileLink.click();
+        return new ProfilePage();
+    }
+
+    @Step("ЗАПОЛНЕНИЕ ПРОФИЛЯ ПОЛЬЗОВАТЕЛЯ")
+    public ProfilePage fillUserProfile(ProfilePage profilePage, String firstName, String lastName, int cycleNumber) {
+        System.out.println("👤 Заполняем профиль: " + firstName + " " + lastName);
+        profilePage
+                .setFirstName(firstName)
+                .saveProfile();
+
+        screenshot("profile_cycle_" + cycleNumber);
+
+        System.out.println(" Профиль успешно заполнен: " + firstName + " " + lastName);
+
+        return profilePage;
+    }
+
+    @Step("Сохраняем профиль")
     public ProfilePage saveProfile() {
         saveButton.click();
         return this;
     }
 
+    @Step("Переход в категорию")
     public ProfilePage goToCategories() {
         $("a[href='/categories']").click();
         return this;
     }
 
+    @Step("Находим категорию и нажимаем кнопку архивации")
     public ProfilePage archiveCategory(String categoryName) {
-        // Находим категорию и нажимаем кнопку архивации
         $$("tr").findBy(text(categoryName))
                 .$("button[data-test='archive-category']").click();
         return this;
     }
 
+    @Step("Находим архивную категорию и нажимаем кнопку восстановления")
     public ProfilePage restoreCategory(String categoryName) {
-        // Находим архивную категорию и нажимаем кнопку восстановления
         $$("tr").findBy(text(categoryName))
                 .$("button[data-test='restore-category']").click();
         return this;
     }
 
+    @Step("Проверяем, что категория помечена как архивная")
     public ProfilePage checkCategoryArchived(String categoryName) {
-        // Проверяем, что категория помечена как архивная
         $$("tr").findBy(text(categoryName))
                 .$("span[data-test='archived-badge']").shouldBe(visible);
         return this;
     }
 
+    @Step("Проверяем, что категория '{categoryName}' активна (не имеет архивного значка)")
     public ProfilePage checkCategoryActive(String categoryName) {
-        // Проверяем, что категория активна (нет значка архивной)
         $$("tr").findBy(text(categoryName))
                 .$("span[data-test='archived-badge']").shouldNotBe(visible);
         return this;
     }
 
-//    public ProfilePage checkProfileSaved() {
-//        successMessage.shouldBe(visible).shouldHave(text("success"));
-//        return this;
-//    }
-//
-//    public MainPage returnToMainPage() {
-//        mainPageLink.click();
-//        return new MainPage();
-//    }
+
 }
